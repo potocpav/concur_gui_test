@@ -16,12 +16,12 @@ def app():
 	i = 0
 
 	while True:
-		event, key = yield from c.orr([
+		key, value = yield from c.orr([
 			create_main_view(),
 			c.tag("Result", c.Block(running_future)) if running_future else c.nothing()
 			])
 
-		if event == "Nice Feature":
+		if key == "Nice Feature":
 			if running_future is None:
 				print("Starting computation...")
 				running_future = executor.submit(do_work, i)
@@ -29,11 +29,11 @@ def app():
 			else:
 				print("Computation already running.")
 
-		elif event == "Result":
+		elif key == "Result":
 			running_future = None
-			print(f"Done. Result: {key}")
+			print(f"Done. Result: {value}")
 
-		elif event == "Quit":
+		elif key == "Quit":
 			break
 
 		yield
