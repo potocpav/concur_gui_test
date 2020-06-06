@@ -13,11 +13,13 @@ from src.features.nice_feature.nice_feature import do_work
 def app():
 	executor = ThreadPoolExecutor(100)
 	running_future = None
+	window_visible = True
 	i = 0
 
 	while True:
 		key, value = yield from c.orr([
 			create_main_view(),
+			c.optional(window_visible, nice_feature_gui),
 			c.tag("Result", c.Block(running_future)) if running_future else c.nothing()
 			])
 
@@ -26,6 +28,7 @@ def app():
 				print("Starting computation...")
 				running_future = executor.submit(do_work, i)
 				i += 1
+				window_visible = False
 			else:
 				print("Computation already running.")
 
@@ -33,8 +36,14 @@ def app():
 			running_future = None
 			print(f"Done. Result: {value}")
 
+		elif key == "Show Window":
+			window_visible = True
+		elif key == "Close":
+			window_visible = False
+
 		elif key == "Quit":
 			break
+
 
 		yield
 
@@ -49,7 +58,7 @@ def create_main_view():
 			])),
 		])),
 
-		nice_feature_gui(),
+		c.button("Show Window"),
 		c.button("Quit"),
 		c.key_press("Quit", ord('Q'), ctrl=True),
 	])
