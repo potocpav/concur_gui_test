@@ -1,22 +1,41 @@
 import datetime
 from threading import Thread
 import concur as c
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from src.features.nice_feature.nice_feature_gui import nice_feature_gui
+from src.features.nice_feature.nice_feature import do_work
 
-running_features = list()
+
+
 
 
 def app():
+	executor = ThreadPoolExecutor(100)
+	running_future = None
+	i = 0
+
 	while True:
-		event, key = yield from create_main_view()
+		event, key = yield from c.orr([
+			create_main_view(),
+			c.tag("Result", c.Block(running_future)) if running_future else c.nothing()
+			])
+
 		if event == "Nice Feature":
-			from src.features.nice_feature.nice_feature import NiceFeature
-			t_nice_feature = Thread(target=NiceFeature().run, daemon=True)
-			t_nice_feature.start()
-			running_features.append({"attack_name": "Token Checker", "timestamp": datetime.datetime.now(), "thread_obj": t_nice_feature})
+			if running_future is None:
+				print("Starting computation...")
+				running_future = executor.submit(do_work, i)
+				i += 1
+			else:
+				print("Computation already running.")
+
+		elif event == "Result":
+			running_future = None
+			print(f"Done. Result: {key}")
+
 		elif event == "Quit":
 			break
+
 		yield
 
 
