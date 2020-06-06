@@ -8,9 +8,8 @@ running_features = list()
 
 
 def app():
-	main_window = create_main_view()
 	while True:
-		event, key = yield from main_window
+		event, key = yield from create_main_view()
 		if event == "Nice Feature":
 			from src.features.nice_feature.nice_feature import NiceFeature
 			t_nice_feature = Thread(target=NiceFeature().run(), daemon=True)
