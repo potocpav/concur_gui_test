@@ -4,7 +4,6 @@ import concur as c
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from src.features.nice_feature.nice_feature_gui import nice_feature_gui
-from src.features.nice_feature.nice_feature import do_work
 
 
 class State:
@@ -15,40 +14,29 @@ class State:
 		self.work_result = None
 
 
+executor = ThreadPoolExecutor(100)
+
 def app():
-	executor = ThreadPoolExecutor(100)
 	state = State()
-
 	while True:
-		key, value = yield from c.orr([
-			create_main_view(state),
-			c.optional(state.window_visible, nice_feature_gui),
-			c.tag("Result", c.Block(state.future)) if state.future else c.nothing()
-			])
+		key, value = yield from create_main_view(state)
 
-		if key == "Nice Feature":
-			if state.future is None:
-				print("Starting computation...")
-				state.future = executor.submit(do_work, state.work_id)
-				state.work_id += 1
-				state.window_visible = False
-			else:
-				print("Computation already running.")
+		if key == "Show Window":
+			state.window_visible = True
 
+		# This can't be in `nice_feature_gui`, because it is not called when the window not shown.
+		# There is a workaround for that, but I'm not sure if it even belongs to `nice_feature_gui`.
 		elif key == "Result":
 			state.future = None
 			state.work_result = value
 			print(f"Done. Result: {value}")
 
-		elif key == "Show Window":
-			state.window_visible = True
-		elif key == "Close":
-			state.window_visible = False
+		# This is not strictly necessary, but may be useful for the Undo operation or something.
+		elif key == "Modify State":
+			state = value
 
 		elif key == "Quit":
 			break
-
-
 		yield
 
 
@@ -60,7 +48,7 @@ def create_main_view(state):
 	else:
 		status_text = ""
 
-	main_window = c.orr([
+	return c.orr([
 		c.main_menu_bar(widget=c.orr([
 			c.menu(label="File", widget=c.orr([
 				c.menu_item("Do things"),
@@ -68,13 +56,14 @@ def create_main_view(state):
 			])),
 		])),
 
+		c.optional(state.window_visible, nice_feature_gui, state, executor),
+		c.tag("Result", c.optional(state.future, c.Block, state.future)),
+
 		c.button("Show Window"),
 		c.text(status_text),
 		c.button("Quit"),
 		c.key_press("Quit", ord('Q'), ctrl=True),
 	])
-
-	return main_window
 
 
 if __name__ == "__main__":
