@@ -16,6 +16,8 @@ def app():
 			t_nice_feature = Thread(target=NiceFeature().run(), daemon=True)
 			t_nice_feature.start()
 			running_features.append({"attack_name": "Token Checker", "timestamp": datetime.datetime.now(), "thread_obj": t_nice_feature})
+		elif event == "Quit":
+			break
 
 
 def create_main_view():
