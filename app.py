@@ -17,6 +17,7 @@ def app():
 			running_features.append({"attack_name": "Token Checker", "timestamp": datetime.datetime.now(), "thread_obj": t_nice_feature})
 		elif event == "Quit":
 			break
+		yield
 
 
 def create_main_view():
