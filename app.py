@@ -1,5 +1,5 @@
 import datetime
-from threading import Thread
+from threading import Thread, activeCount
 import concur as c
 from concurrent.futures.thread import ThreadPoolExecutor
 
@@ -15,6 +15,7 @@ class State:
 
 
 executor = ThreadPoolExecutor(100)
+
 
 def app():
 	state = State()
@@ -34,6 +35,9 @@ def app():
 		# This is not strictly necessary, but may be useful for the Undo operation or something.
 		elif key == "Modify State":
 			state = value
+
+		elif key == "Active Threads":
+			print(activeCount())
 
 		elif key == "Quit":
 			break
@@ -61,6 +65,7 @@ def create_main_view(state):
 
 		c.button("Show Window"),
 		c.text(status_text),
+		c.button("Active Threads"),
 		c.button("Quit"),
 		c.key_press("Quit", ord('Q'), ctrl=True),
 	])
