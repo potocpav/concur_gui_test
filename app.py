@@ -5,6 +5,7 @@ from src.features.nice_feature.nice_feature_gui import nice_feature_gui, NiceFea
 
 class State:
 	def __init__(self):
+		# Two identical features for fun.
 		self.feature1 = NiceFeatureState(True)
 		self.feature2 = NiceFeatureState(False)
 

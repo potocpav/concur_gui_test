@@ -1,7 +1,5 @@
 import time
-# import queue
 import concur as c
-# from src.features.nice_feature.nice_feature import do_work
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing import Process, Queue
 import queue
@@ -58,6 +56,7 @@ def nice_thread(q, n_threads, n_tasks):
 		time.sleep(t)
 		q.put((i, "Done."))
 
+	# `-1` signifies that the nice_thread status is returned. This is quite ugly. Maybe use two separate queues?
 	q.put((-1, "Running..."))
 	executor = ThreadPoolExecutor(n_threads)
 	for i in range(n_tasks):
@@ -68,6 +67,7 @@ def nice_thread(q, n_threads, n_tasks):
 
 
 def thread_table(statuses):
+	"""Render a simple table with thread statuses."""
 	rows = [c.text_colored("Thread status:", 'yellow')]
 	for i, status in enumerate(statuses):
 		rows.append(c.text(f"{i:3d}: {status}"))
@@ -75,6 +75,7 @@ def thread_table(statuses):
 
 
 def nice_feature_gui(state, name):
+	# use `multi_orr`, so that concurrent events aren't thrown away
 	events = yield from c.window(name, c.multi_orr([
 		c.tag("Feature Queue", c.listen(state.status_queue)),
 
@@ -91,7 +92,7 @@ def nice_feature_gui(state, name):
 		c.optional(state.task_statuses, thread_table, state.task_statuses),
 		]))
 
-	for tag, value in events:
+	for tag, value in events:  # This is how event handling works with `multi_orr`
 		if tag == "Start":
 			assert state.thread is None
 			state.status_queue = Queue()
@@ -105,8 +106,10 @@ def nice_feature_gui(state, name):
 			state.status = "Terminated."
 			state.thread = None
 
-		elif tag == "Feature Queue":
+		elif tag == "Feature Queue":  # Handle events fired by threads.
+			# Update the thread state table
 			thread_id, new_status = value
+			# Update the feature status
 			if thread_id < 0:
 				state.status = new_status
 				if new_status == "Work done.":
