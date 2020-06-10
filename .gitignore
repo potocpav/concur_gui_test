@@ -1,5 +1,6 @@
 # custom
 *.ini
+__pycache__
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,windows,pycharm+all,venv
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,windows,pycharm+all,venv

@@ -1,94 +1,126 @@
-import ctypes
 import time
-import logging
-import queue
-from threading import activeCount
-from threading import current_thread
+# import queue
 import concur as c
-from src.features.nice_feature.nice_feature import do_work
-
-logger = logging.getLogger('nice-feature')
-killed_threads = 0
-
-
-class QueueHandler(logging.Handler):
-	def __init__(self, log_queue):
-		super().__init__()
-		self.log_queue = log_queue
-
-	def emit(self, record):
-		self.log_queue.put(record)
+# from src.features.nice_feature.nice_feature import do_work
+from concurrent.futures.thread import ThreadPoolExecutor
+from multiprocessing import Process, Queue
+import queue
+from random import randint
 
 
-logging.basicConfig(level=logging.DEBUG)
-log_queue = queue.Queue()
-queue_handler = QueueHandler(log_queue)
-logger.addHandler(queue_handler)
+# class NiceFeature:
+# 	def __init__(self):
+# 		self.do_stuff = True
+#
+# 	def run(self):
+# 		executor = ThreadPoolExecutor(100)
+# 		for i in range(10):
+# 			executor.submit(self.do_work, randint(1, 10))
+# 		executor.shutdown(wait=True)
+#
+# 	def do_work(self, _input):
+# 		if self.do_stuff:
+# 			time.sleep(1)
+# 			print(_input)
 
 
-def nice_feature_gui(state, executor):
-	thread_pool = list()
-	key, value = yield from c.window("Nice Feature", c.orr([
-		c.button("Nice Feature"),
-		c.button("Close"),
+# logger = logging.getLogger('nice-feature')
+
+
+# class QueueHandler(logging.Handler):
+# 	def __init__(self, log_queue):
+# 		super().__init__()
+# 		self.log_queue = log_queue
+#
+# 	def emit(self, record):
+# 		self.log_queue.put(record)
+#
+
+# logging.basicConfig(level=logging.DEBUG)
+# log_queue = queue.Queue()
+# queue_handler = QueueHandler(log_queue)
+# logger.addHandler(queue_handler)
+
+class NiceFeatureState(object):
+	def __init__(self, visible):
+		self.window_visible = visible
+		self.n_threads = 10
+		self.n_tasks = 20
+		self.status_queue = queue.SimpleQueue()
+		self.task_statuses = None
+		self.thread = None
+		self.status = "Idle"
+
+
+def nice_thread(q, n_threads, n_tasks):
+	def do_work(i, t):
+		q.put((i, "Working..."))
+		time.sleep(t)
+		q.put((i, "Done."))
+
+	q.put((-1, "Running..."))
+	executor = ThreadPoolExecutor(n_threads)
+	for i in range(n_tasks):
+		executor.submit(do_work, i, randint(1, 10) / 10)
+
+	executor.shutdown(wait=True)
+	q.put((-1, "Work done."))
+
+
+def thread_table(statuses):
+	rows = [c.text_colored("Thread status:", 'yellow')]
+	for i, status in enumerate(statuses):
+		rows.append(c.text(f"{i:3d}: {status}"))
+	return c.orr(rows)
+
+
+def nice_feature_gui(state, name):
+	events = yield from c.window(name, c.multi_orr([
+		c.tag("Feature Queue", c.listen(state.status_queue)),
+
+		c.slider_int("Number of threads", state.n_threads, 1, 100),
+		c.slider_int("Number of tasks", state.n_tasks, 1, 1000),
+		c.button("Terminate") if state.thread else c.button("Start"),
+		c.button("Close Window"),
+		c.separator(),
+
+		c.text_colored("Feature status:", 'yellow'),
+		c.text(f"{state.status}"),
+		c.separator(),
+
+		c.optional(state.task_statuses, thread_table, state.task_statuses),
 		]))
 
-	if key == "Nice Feature":
-		if state.future is None:
-			print("Starting computation...")
+	for tag, value in events:
+		if tag == "Start":
+			assert state.thread is None
+			state.status_queue = Queue()
+			state.task_statuses = ["Waiting"] * state.n_tasks
+			state.thread = Process(target=nice_thread, args=(state.status_queue, state.n_threads, state.n_tasks,))
+			state.thread.start()
 
-			for i in range(10):
-				state.future = executor.submit(do_work, state.work_id)
-				state.future.arg = i
-				state.work_id += 1
-				thread_pool.append((i, state.future))
+		elif tag == "Terminate":
+			assert state.thread is not None
+			state.thread.terminate()
+			state.status = "Terminated."
+			state.thread = None
 
-			for i, t in reversed(thread_pool):
-				executor.submit(terminate_thread, i, t, executor)
+		elif tag == "Feature Queue":
+			thread_id, new_status = value
+			if thread_id < 0:
+				state.status = new_status
+				if new_status == "Work done.":
+					state.thread = None
+			else:
+				state.task_statuses[thread_id] = new_status
 
-		else:
-			print("Computation already running.")
+		elif tag == "Number of tasks":
+			state.n_tasks = value
 
-	elif key == "Close":
-		state.window_visible = False
+		elif tag == "Number of threads":
+			state.n_threads = value
 
-	return "Modify State", state
+		elif tag == "Close Window":
+			state.window_visible = False
 
-
-def terminate_thread(thread_number, thread, executor):
-	global killed_threads
-	while True:
-		if thread.done():
-			try:
-				killed_threads += 1
-				logger.info(f"killing thread number {thread_number} - {current_thread().ident}. Killed {killed_threads} so far.")
-				if killed_threads == 10:
-					logger.info(f"Still active threads: {activeCount()}. Attempting to force kill.")
-					if activeCount() > 1:
-						for t in executor._threads:
-							logger.info(f"Killing {t.ident}")
-							exc = ctypes.py_object(SystemExit)
-							res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(t.ident), exc)
-							if res == 0:
-								raise ValueError("nonexistent thread id")
-							elif res > 1:
-								ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-								raise SystemError("PyThreadState_SetAsyncExc failed")
-							if activeCount() > 1:
-								logger.info(f"Failed. Still active threads: {activeCount()}")
-							else:
-								logger.info("Success!")
-
-				exc = ctypes.py_object(SystemExit)
-				res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(current_thread().ident), exc)
-				if res == 0:
-					raise ValueError("nonexistent thread id")
-				elif res > 1:
-					ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-					raise SystemError("PyThreadState_SetAsyncExc failed")
-			except Exception as e:
-				print(e)
-			return
-		else:
-			logger.info(f"thread {thread} still running.. {activeCount()} total threads active.")
-		time.sleep(5)
+	return state
