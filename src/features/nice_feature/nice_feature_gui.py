@@ -106,6 +106,10 @@ def nice_feature_gui(state, name):
 			state.status = "Terminated."
 			state.thread = None
 
+			for i, status in enumerate(state.task_statuses, 0):
+				if status in ["Waiting", "Working..."]:
+					state.task_statuses[i] = "Terminated."
+
 		elif tag == "Feature Queue":  # Handle events fired by threads.
 			# Update the thread state table
 			thread_id, new_status = value
