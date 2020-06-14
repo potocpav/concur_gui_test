@@ -1,43 +1,12 @@
-import time
 import concur as c
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing import Process, Queue
 import queue
-from random import randint
+import imgui
+from src.features.nice_feature.nice_feature import NiceFeature
 
+information_the_feature_needs = None
 
-# class NiceFeature:
-# 	def __init__(self):
-# 		self.do_stuff = True
-#
-# 	def run(self):
-# 		executor = ThreadPoolExecutor(100)
-# 		for i in range(10):
-# 			executor.submit(self.do_work, randint(1, 10))
-# 		executor.shutdown(wait=True)
-#
-# 	def do_work(self, _input):
-# 		if self.do_stuff:
-# 			time.sleep(1)
-# 			print(_input)
-
-
-# logger = logging.getLogger('nice-feature')
-
-
-# class QueueHandler(logging.Handler):
-# 	def __init__(self, log_queue):
-# 		super().__init__()
-# 		self.log_queue = log_queue
-#
-# 	def emit(self, record):
-# 		self.log_queue.put(record)
-#
-
-# logging.basicConfig(level=logging.DEBUG)
-# log_queue = queue.Queue()
-# queue_handler = QueueHandler(log_queue)
-# logger.addHandler(queue_handler)
 
 class NiceFeatureState(object):
 	def __init__(self, visible):
@@ -50,22 +19,26 @@ class NiceFeatureState(object):
 		self.status = "Idle"
 
 
-def nice_thread(q, n_threads, n_tasks):
-	def do_work(i, t):
-		q.put((i, "Working..."))
-		time.sleep(t)
-		q.put((i, "Done."))
+def threadify(q, n_threads, n_tasks, _information_the_feature_needs):
+	nice_feature = NiceFeature(feature_information=_information_the_feature_needs)
 
 	# `-1` signifies that the nice_thread status is returned. This is quite ugly. Maybe use two separate queues?
 	q.put((-1, "Running..."))
 	executor = ThreadPoolExecutor(n_threads)
 	for i in range(n_tasks):
-		executor.submit(do_work, i, randint(1, 10) / 10)
-
+		executor.submit(append_to_queue, status_queue=q, wid=i, feature_object=nice_feature)
 	executor.shutdown(wait=True)
 	q.put((-1, "Work done."))
 
 
+# wid = worker id
+def append_to_queue(status_queue, wid: int, feature_object: NiceFeature):
+	status_queue.put((wid, "Working..."))
+	feature_object.run(wid)
+	status_queue.put((wid, "Done."))
+
+
+# TODO: Make the thread table collapsable
 def thread_table(statuses):
 	"""Render a simple table with thread statuses."""
 	rows = [c.text_colored("Thread status:", 'yellow')]
@@ -75,12 +48,15 @@ def thread_table(statuses):
 
 
 def nice_feature_gui(state, name):
+	global information_the_feature_needs
+
 	# use `multi_orr`, so that concurrent events aren't thrown away
 	events = yield from c.window(name, c.multi_orr([
 		c.tag("Feature Queue", c.listen(state.status_queue)),
 
 		c.slider_int("Number of threads", state.n_threads, 1, 100),
 		c.slider_int("Number of tasks", state.n_tasks, 1, 1000),
+		c.input_text(name="Information, the feature needs", value="", tag="feature_information"),
 		c.button("Terminate") if state.thread else c.button("Start"),
 		c.button("Close Window"),
 		c.separator(),
@@ -90,14 +66,25 @@ def nice_feature_gui(state, name):
 		c.separator(),
 
 		c.optional(state.task_statuses, thread_table, state.task_statuses),
-		]))
+	]))
 
 	for tag, value in events:  # This is how event handling works with `multi_orr`
+
+		if tag == "feature_information":
+			information_the_feature_needs = value
+
 		if tag == "Start":
+			if not information_the_feature_needs:  # TODO: The popup does not show up
+				imgui.open_popup("Feature information is missing!")
+				if imgui.begin_popup("Feature information is missing!"):
+					imgui.button("OK")
+					imgui.end_popup()
+				print("Feature information is missing!")
+				continue
 			assert state.thread is None
 			state.status_queue = Queue()
 			state.task_statuses = ["Waiting"] * state.n_tasks
-			state.thread = Process(target=nice_thread, args=(state.status_queue, state.n_threads, state.n_tasks,))
+			state.thread = Process(target=threadify, args=(state.status_queue, state.n_threads, state.n_tasks, information_the_feature_needs,))
 			state.thread.start()
 
 		elif tag == "Terminate":
