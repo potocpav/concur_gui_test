@@ -1,73 +1,65 @@
 import concur as c
 import imgui
-
-from src.features.nice_feature.nice_feature_gui import nice_feature_gui, NiceFeatureState
-
-
-style_choices = {"Dark": imgui.style_colors_dark, "Classic": imgui.style_colors_classic, "Light": imgui.style_colors_light}
+from concur.integrations import glfw
+from src.features.nice_feature.nice_feature_gui import NiceFeatureGUI
+from src.features.settings.settings_gui import SettingsGUI
 
 
 class State:
 	def __init__(self):
+		self.nice_feature = NiceFeatureGUI()
+		self.settings = SettingsGUI()
+
+
+class Application:
+	def __init__(self):
+		self.state = State()
+		self.style_choices = {"Dark": imgui.style_colors_dark, "Classic": imgui.style_colors_classic, "Light": imgui.style_colors_light}
 		self.style = "Dark"
-		# Two identical features for fun.
-		self.feature1 = NiceFeatureState(True)
-		self.feature2 = NiceFeatureState(False)
 
+		c.main(widget=self.run_application(), name="Application", width=1024, height=768, menu_bar=True)
 
-def create_main_view(state):
-	return c.orr([
-		c.main_menu_bar(widget=c.orr([
-			c.menu(label="File", widget=c.orr([
+	def __create_main_view(self):
+		widgets = list()
+
+		main_menu_bar = c.main_menu_bar(widget=c.orr([
+				c.menu(label="File", widget=c.orr([
+					c.menu_item(label="Quit", shortcut="CTRL+Q")
+				])),
 				c.menu("Style", widget=c.orr(
-					[c.menu_item(label, selected=state.style==label) for label in style_choices]
-					)),
-				c.menu_item("Do other things"),
-			])),
-		])),
+						[c.menu_item(label, selected=self.style == label) for label in self.style_choices],
+				)),
+		]))
+		widgets.append(main_menu_bar)
 
-		c.button("Hide Feature 1") if state.feature1.window_visible else c.button("Show Feature 1"),
-		c.button("Hide Feature 2") if state.feature2.window_visible else c.button("Show Feature 2"),
-		c.button("Quit"),
-		c.key_press("Quit", ord('Q'), ctrl=True),
+		features = [
+				c.forever(self.state.nice_feature.render),
+				c.forever(self.state.settings.render),
+		]
+		widgets.extend(features)
 
-		c.tag("Modify Feature 1", c.optional(state.feature1.window_visible, nice_feature_gui, state.feature1, "Feature 1")),
-		c.tag("Modify Feature 2", c.optional(state.feature2.window_visible, nice_feature_gui, state.feature2, "Feature 2")),
-	])
+		shortcuts = [
+			c.key_press(name="Quit", key_index=glfw.KEY_Q, ctrl=True)
+		]
+		widgets.extend(shortcuts)
 
+		return c.orr(widgets)
 
-def app():
-	state = State()
-	while True:
-		tag, value = yield from create_main_view(state)
+	def run_application(self):
+		while True:
+			tag, value = yield from self.__create_main_view()
 
-		if tag == "Show Feature 1":
-			state.feature1.window_visible = True
-		elif tag == "Hide Feature 1":
-			state.feature1.window_visible = False
+			if tag in self.style_choices:
+				self.style = tag
+				self.style_choices[tag]()
 
-		elif tag == "Show Feature 2":
-			state.feature2.window_visible = True
-		elif tag == "Hide Feature 2":
-			state.feature2.window_visible = False
+			elif tag == "Quit":
+				break
+			else:
+				print(f"Unhandled event: {tag}")
 
-		# This is not strictly necessary, but may be useful for the Undo operation or something.
-		elif tag == "Modify Feature 1":
-			state.feature1 = value
-		elif tag == "Modify Feature 2":
-			state.feature2 = value
-
-		elif tag in style_choices:
-			state.style = tag
-			style_choices[tag]()
-
-		elif tag == "Quit":
-			break
-
-		else:
-			print(f"Unhandled event: {tag}")
-		yield
+			yield
 
 
 if __name__ == "__main__":
-	c.main(widget=app(), name="Nice Application", menu_bar=True)
+	app = Application()
