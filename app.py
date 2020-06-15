@@ -4,8 +4,12 @@ import imgui
 from src.features.nice_feature.nice_feature_gui import nice_feature_gui, NiceFeatureState
 
 
+style_choices = {"Dark": imgui.style_colors_dark, "Classic": imgui.style_colors_classic, "Light": imgui.style_colors_light}
+
+
 class State:
 	def __init__(self):
+		self.style = "Dark"
 		# Two identical features for fun.
 		self.feature1 = NiceFeatureState(True)
 		self.feature2 = NiceFeatureState(False)
@@ -15,7 +19,9 @@ def create_main_view(state):
 	return c.orr([
 		c.main_menu_bar(widget=c.orr([
 			c.menu(label="File", widget=c.orr([
-				c.menu_item("Change Theme"),  # TODO: Would be nicer to have a separate menu item, called "style" from where one can select the different themes.
+				c.menu("Style", widget=c.orr(
+					[c.menu_item(label, selected=state.style==label) for label in style_choices]
+					)),
 				c.menu_item("Do other things"),
 			])),
 		])),
@@ -51,13 +57,9 @@ def app():
 		elif tag == "Modify Feature 2":
 			state.feature2 = value
 
-		# TODO: Seems ugly, but I didnt figure out how to implement this in a nicer way
-		elif tag == "Change Theme":
-			choices = [("Dark", imgui.style_colors_dark), ("Classic", imgui.style_colors_classic), ("Light", imgui.style_colors_light)]
-			choice = "Classic"
-			ch, _ = yield from c.orr_same_line([c.radio_button(ch[0], choice == ch[0], tag=ch) for ch in choices])
-			ch[1]()
-			yield
+		elif tag in style_choices:
+			state.style = tag
+			style_choices[tag]()
 
 		elif tag == "Quit":
 			break
