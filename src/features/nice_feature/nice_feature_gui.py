@@ -38,13 +38,13 @@ def append_to_queue(status_queue, wid: int, feature_object: NiceFeature):
 	status_queue.put((wid, "Done."))
 
 
-# TODO: Make the thread table collapsable
 def thread_table(statuses):
 	"""Render a simple table with thread statuses."""
-	rows = [c.text_colored("Thread status:", 'yellow')]
-	for i, status in enumerate(statuses):
-		rows.append(c.text(f"{i:3d}: {status}"))
-	return c.orr(rows)
+	rows = []
+	if statuses:
+		for i, status in enumerate(statuses):
+			rows.append(c.text(f"{i:3d}: {status}"))
+	return c.collapsing_header("Thread status", c.optional(statuses, c.orr, rows), open=True)
 
 
 def nice_feature_gui(state, name):
@@ -61,9 +61,8 @@ def nice_feature_gui(state, name):
 
 		c.text_colored("Feature status:", 'yellow'),
 		c.text(f"{state.status}"),
-		c.separator(),
 
-		c.optional(state.task_statuses, thread_table, state.task_statuses),
+		thread_table(state.task_statuses),
 	]))
 
 	for tag, value in events:  # This is how event handling works with `multi_orr`
