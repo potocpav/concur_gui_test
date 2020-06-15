@@ -5,14 +5,14 @@ import queue
 import imgui
 from src.features.nice_feature.nice_feature import NiceFeature
 
-information_the_feature_needs = None
-
 
 class NiceFeatureState(object):
 	def __init__(self, visible):
 		self.window_visible = visible
 		self.n_threads = 10
 		self.n_tasks = 20
+		self.information = None
+
 		self.status_queue = queue.SimpleQueue()
 		self.task_statuses = None
 		self.thread = None
@@ -48,8 +48,6 @@ def thread_table(statuses):
 
 
 def nice_feature_gui(state, name):
-	global information_the_feature_needs
-
 	# use `multi_orr`, so that concurrent events aren't thrown away
 	events = yield from c.window(name, c.multi_orr([
 		c.tag("Feature Queue", c.listen(state.status_queue)),
@@ -71,10 +69,10 @@ def nice_feature_gui(state, name):
 	for tag, value in events:  # This is how event handling works with `multi_orr`
 
 		if tag == "feature_information":
-			information_the_feature_needs = value
+			state.information = value
 
 		if tag == "Start":
-			if not information_the_feature_needs:  # TODO: The popup does not show up
+			if not state.information:  # TODO: The popup does not show up
 				imgui.open_popup("Feature information is missing!")
 				if imgui.begin_popup("Feature information is missing!"):
 					imgui.button("OK")
@@ -84,7 +82,7 @@ def nice_feature_gui(state, name):
 			assert state.thread is None
 			state.status_queue = Queue()
 			state.task_statuses = ["Waiting"] * state.n_tasks
-			state.thread = Process(target=threadify, args=(state.status_queue, state.n_threads, state.n_tasks, information_the_feature_needs,))
+			state.thread = Process(target=threadify, args=(state.status_queue, state.n_threads, state.n_tasks, state.information,))
 			state.thread.start()
 
 		elif tag == "Terminate":
