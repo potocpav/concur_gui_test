@@ -83,25 +83,26 @@ def validating_button(label, error, tag=None):
 
 def nice_feature_gui(state, name):
 	# use `multi_orr`, so that concurrent events aren't thrown away
-	events = yield from c.window(name, c.multi_orr([
-		c.tag("Status Queue", c.listen(state.status_queue)),
-		c.tag("Log Queue", c.listen(state.log_queue)),
+	events = yield from c.orr([
+		c.window(name, c.multi_orr([
+			c.tag("Status Queue", c.listen(state.status_queue)),
+			c.tag("Log Queue", c.listen(state.log_queue)),
 
-		c.slider_int("Number of threads", state.n_threads, 1, 100),
-		c.slider_int("Number of tasks", state.n_tasks, 1, 1000),
-		c.input_text(name="Information, the feature needs", value=state.information, tag="Information"),
-		c.button("Terminate") if state.thread
-			else validating_button("Start", None if state.information else "Feature information is missing!"),
-		c.button("Close Window"),
-		c.separator(),
+			c.slider_int("Number of threads", state.n_threads, 1, 100),
+			c.slider_int("Number of tasks", state.n_tasks, 1, 1000),
+			c.input_text(name="Information, the feature needs", value=state.information, tag="Information"),
+			c.button("Terminate") if state.thread
+				else validating_button("Start", None if state.information else "Feature information is missing!"),
+			c.button("Close Window"),
+			c.separator(),
 
-		c.text_colored("Feature status:", 'yellow'),
-		c.text(f"{state.status}"),
+			c.text_colored("Feature status:", 'yellow'),
+			c.text(f"{state.status}"),
 
-		thread_table(state.task_statuses),
-
-		c.window(f"{name} Log", log_widget(state.log)),
-	]))
+			thread_table(state.task_statuses),
+			])),
+			c.window(f"{name} Log", log_widget(state.log)),
+		])
 
 	for tag, value in events:  # This is how event handling works with `multi_orr`
 
