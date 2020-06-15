@@ -101,7 +101,7 @@ def nice_feature_gui(state, name):
 
 			thread_table(state.task_statuses),
 			])),
-			c.window(f"{name} Log", log_widget(state.log)),
+		c.window(f"{name} Log", log_widget(state.log)),
 		])
 
 	for tag, value in events:  # This is how event handling works with `multi_orr`
