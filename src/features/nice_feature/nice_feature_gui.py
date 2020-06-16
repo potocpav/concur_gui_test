@@ -92,6 +92,7 @@ class NiceFeatureGUI(BaseGUI):
 			c.text_colored("Feature status:", 'yellow'),
 			c.text(f"{self.window_status}"),
 			c.optional(self.task_statuses, self.generate_thread_table),
+			# TODO Implement a progress bar based on the amount of running threads
 			c.separator(),
 			c.text_colored(f"{self.name} Log:", 'orange'),
 			c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
