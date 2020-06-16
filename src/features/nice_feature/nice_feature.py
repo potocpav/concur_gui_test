@@ -24,7 +24,7 @@ class NiceFeature:
 	def run(self, wid):
 		self.worker_id = wid
 		sleeptime = randint(1, 10)
-		# self.logger.info(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.")
-		self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))  # TODO: Output this in green color in concurs logging window
+		self.logger.info(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.")
+		# self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))  # TODO: Output this in green color in concurs logging window
 		sleep(sleeptime)
 		return

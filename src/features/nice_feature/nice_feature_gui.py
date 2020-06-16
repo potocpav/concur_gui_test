@@ -39,7 +39,7 @@ class NiceFeatureGUI(BaseGUI):
 		if self.task_statuses:
 			for i, status in enumerate(self.task_statuses):
 				rows.append(c.text(f"{i}: {status}"))
-			return c.collapsing_header("Thread status", c.optional(bool(self.task_statuses), c.orr, rows), open=True)
+			return c.collapsing_header("Thread status", c.optional(bool(self.task_statuses), c.orr, rows), open=False)
 
 	# These two widgets are not in Concur, so they show how to add new widgets.
 	@staticmethod
@@ -76,25 +76,26 @@ class NiceFeatureGUI(BaseGUI):
 
 	def render(self):
 		# use `multi_orr`, so that concurrent events aren't thrown away
-		events = yield from c.orr([
-			c.window(self.name, c.multi_orr([
-				c.tag(tag_name="Status Queue", elem=c.listen(self.status_queue)),
-				c.tag("Log Queue", c.listen(self.log_queue)),
+		events = yield from	c.window(self.name, c.multi_orr([
+			c.tag(tag_name="Status Queue", elem=c.listen(self.status_queue)),
+			c.tag("Log Queue", c.listen(self.log_queue)),
 
-				c.slider_int("Number of threads", self.n_threads, 1, 100),
-				c.slider_int("Number of tasks", self.n_tasks, 1, 1000),
-				c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
-				c.button("Terminate") if self.process
-				else self.validating_button("Start", None if self.information
-				else "Feature information is missing!"),
-				c.separator(),
+			c.slider_int("Number of threads", self.n_threads, 1, 100),
+			c.slider_int("Number of tasks", self.n_tasks, 1, 1000),
+			c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
+			c.button("Terminate") if self.process
+			else self.validating_button("Start",
+			None if self.information
+			else "Feature information is missing!"),
+			c.separator(),
 
-				c.text_colored("Feature status:", 'yellow'),
-				c.text(f"{self.window_status}"),
-				c.optional(self.task_statuses, self.generate_thread_table)
-			])),
-			c.window(f"{self.name} Log", self.log_widget(self.log)),
-		])
+			c.text_colored("Feature status:", 'yellow'),
+			c.text(f"{self.window_status}"),
+			c.optional(self.task_statuses, self.generate_thread_table),
+			c.separator(),
+			c.text_colored(f"{self.name} Log:", 'orange'),
+			c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+		]))
 
 		for tag, value in events:  # This is how event handling works with `multi_orr`
 
