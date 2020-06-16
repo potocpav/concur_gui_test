@@ -56,6 +56,9 @@ class NiceFeatureGUI(BaseGUI):
 		""" Validating button.
 		Behaves in the same way as a regular `concur.widgets.button` when `error` is None.
 		When `error` is a string, it displays an error popup instead of emitting an event.
+		TODO: Popup functionality
+		This kind of popup I would call a blocking popup which prevents the user from starting the feature.
+		How could I make it, that the user will see a popup which is just a warning or information but he can still proceeed to start the feature?
 		"""
 		while True:
 			if imgui.button(label):
@@ -82,7 +85,8 @@ class NiceFeatureGUI(BaseGUI):
 				c.slider_int("Number of tasks", self.n_tasks, 1, 1000),
 				c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
 				c.button("Terminate") if self.process
-				else self.validating_button("Start", None if self.information else "Feature information is missing!"),
+				else self.validating_button("Start", None if self.information
+				else "Feature information is missing!"),
 				c.separator(),
 
 				c.text_colored("Feature status:", 'yellow'),
