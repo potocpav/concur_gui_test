@@ -1,5 +1,5 @@
 import queue
-from multiprocessing import  Queue
+from multiprocessing import Queue
 
 
 class BaseGUI(object):

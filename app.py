@@ -23,18 +23,18 @@ class Application:
 		widgets = list()
 
 		main_menu_bar = c.main_menu_bar(widget=c.orr([
-				c.menu(label="File", widget=c.orr([
-					c.menu_item(label="Quit", shortcut="CTRL+Q")
-				])),
-				c.menu("Style", widget=c.orr(
-						[c.menu_item(label, selected=self.style == label) for label in self.style_choices],
-				)),
+			c.menu(label="File", widget=c.orr([
+				c.menu_item(label="Quit", shortcut="CTRL+Q")
+			])),
+			c.menu("Style", widget=c.orr(
+				[c.menu_item(label, selected=self.style == label) for label in self.style_choices],
+			)),
 		]))
 		widgets.append(main_menu_bar)
 
 		features = [
-				c.forever(self.state.nice_feature.render),
-				c.forever(self.state.settings.render),
+			c.forever(self.state.nice_feature.render),
+			c.forever(self.state.settings.render),
 		]
 		widgets.extend(features)
 

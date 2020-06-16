@@ -1,7 +1,7 @@
 import logging.handlers
 from time import sleep
 from random import randint
-# from multiprocessing import Queue
+import colored
 
 
 class NiceFeature:
@@ -14,9 +14,17 @@ class NiceFeature:
 		self.some_information = feature_information
 		self.worker_id = None
 
+		# prints
+		self.bad = colored.fg("dark_red_1") + colored.attr("bold")
+		self.unknown = colored.fg("orange_3")
+		self.good = colored.fg("medium_spring_green")
+		self.info = colored.fg("white")
+		self.important_info = colored.fg("light_blue")
+
 	def run(self, wid):
 		self.worker_id = wid
 		sleeptime = randint(1, 10)
-		self.logger.info(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.")  # TODO: Output this in a log window, that is appended to the feature on the bottom. (See screenshots in the issue)
+		# self.logger.info(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.")
+		self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))  # TODO: Output this in green color in concurs logging window
 		sleep(sleeptime)
 		return

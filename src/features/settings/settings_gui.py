@@ -1,4 +1,3 @@
-from pathlib import Path
 from platform import system
 
 import concur as c
@@ -90,4 +89,3 @@ class SettingsGUI(BaseGUI):
 		else:
 			print("OS could not be determined")
 			return
-
