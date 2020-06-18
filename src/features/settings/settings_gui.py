@@ -5,6 +5,16 @@ import imgui
 from src.features.base.BaseGUI import BaseGUI
 
 
+def input_text(name, value, buffer_length=255, tag=None, flags=0):
+    """ Text input. """
+    while True:
+        changed, new_value = imgui.input_text(name, value, buffer_length, flags)
+        if changed:
+            return (name if tag is None else tag), new_value
+        else:
+            yield
+
+
 class SettingsGUI(BaseGUI):
 	def __init__(self):
 		super().__init__()
@@ -24,10 +34,29 @@ class SettingsGUI(BaseGUI):
 			c.spacing(),
 			c.text("Username: "),
 			c.same_line(),
-			c.input_text(name="", value=self.username, tag="Username", buffer_length=10),  # TODO Can size of the textfield, that is being displayed in the GUI be changed?
+			# The `c.lift` call is a way to "inject" ImGui calls into the rendering routine.
+			# It may be better to abstract these `lift` calls out into a function (or not).
+			# Note that Concur (and ImGui as a whole) are primarily made for debug interfaces, so custom styling like this is a bit clunky.
+			# The calls used for sizing are [documented here](https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html).
+			# You can do a whole lot of customization like this, I recommend skimming through the above link.
+			c.lift(lambda: imgui.push_item_width(100)),
+			c.input_text(name="", value=self.username, tag="Username", buffer_length=10),
 			c.text("Password: "),
 			c.same_line(),
-			c.input_text(name="", value=self.password, tag="Password"),  # TODO Can I obfuscate whats in here in the GUI, so that it would only show '****'
+
+			# To create the password field, I googled for a bit and found out ImGui supports that in the form of input_text flags:
+			# https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html#imgui.core.input_text
+			#
+			# These flags aren't exposed in Concur, however:
+			# https://potocpav.github.io/python-concur-docs/master/widgets.html#concur.widgets.input_text
+			#
+			# I reported an issue to Concur to add the flags:
+			# https://github.com/potocpav/python-concur/issues/22
+			#
+			# But in the meantime, the fix is simple. The code for `input_text` is trivial (use "EXPAND SOURCE CODE" in the documentation).
+			# I just copied the code into this file, and added the `flags` argument.
+			input_text(name="", value=self.password, tag="Password", flags=imgui.INPUT_TEXT_PASSWORD),
+			c.lift(lambda: imgui.pop_item_width()),
 			c.checkbox("Remember credentials", self.remember_credentials),
 			c.spacing(),
 			c.text("Input file: "),
