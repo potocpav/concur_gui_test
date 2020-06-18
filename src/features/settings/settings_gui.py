@@ -15,6 +15,14 @@ def input_text(name, value, buffer_length=255, tag=None, flags=0):
             yield
 
 
+def dummy(width, height):
+    """ Add a dummy element of a given `width` and `height`.
+
+	Useful for custom-sized vertical or horizontal spacings.
+	"""
+    return lift(imgui.dummy, width, height)
+
+
 class SettingsGUI(BaseGUI):
 	def __init__(self):
 		super().__init__()
@@ -63,7 +71,21 @@ class SettingsGUI(BaseGUI):
 			c.same_line(),
 			c.text(self.filepath),
 			c.button("Open"),
-			c.spacing(), c.spacing(), c.spacing(),  # TODO Is there a nicer way to customize the amount of space being generated?
+			# For custom vertical spacing, I googled "imgui vertical spacing".
+			# First result points here: https://github.com/ocornut/imgui/issues/1487
+			# It recommends using `ImGui::Dummy`.
+			#
+			# I looked through Concur docs, there is no `dummy` unfortunately.
+			# There is a `dummy` in PyImGui: https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html#imgui.core.dummy
+			# This widget is similar to, for example, `c.text`, since it doesn't react to events. The `text` widget is implemented as follows:
+			#
+			# def text(s):
+    		#     """ Passive text display widget. """
+    		#     return lift(imgui.text, s)
+			#
+			# I adapted this function to implement `dummy`.
+			# I filed an issue against Concur: https://github.com/potocpav/python-concur/issues/23
+			dummy(0, 20), c.spacing(), c.spacing(),
 			c.separator(),
 			c.button("Save"),
 			c.same_line(),
