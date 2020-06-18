@@ -48,9 +48,6 @@ class BaseGUI(object):
 		""" Validating button.
 		Behaves in the same way as a regular `concur.widgets.button` when `error` is None.
 		When `error` is a string, it displays an error popup instead of emitting an event.
-		TODO: Popup functionality
-		This kind of popup I would call a blocking popup which prevents the user from starting the feature.
-		How could I make it, that the user will see a popup which is just a warning or information but he can still proceeed to start the feature?
 		"""
 		while True:
 			if imgui.button(label):
@@ -62,6 +59,11 @@ class BaseGUI(object):
 			if imgui.begin_popup("Error Popup"):
 				imgui.text(error)
 				if imgui.button("OK"):
+					imgui.close_current_popup()
+					imgui.end_popup()
+					return tag if tag is not None else label, None
+				imgui.same_line()
+				if imgui.button("Cancel"):
 					imgui.close_current_popup()
 				imgui.end_popup()
 			yield

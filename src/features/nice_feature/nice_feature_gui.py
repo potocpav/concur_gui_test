@@ -29,7 +29,7 @@ class NiceFeatureGUI(BaseGUI):
 			c.button("Terminate") if self.process
 			else self.validating_button("Start",
 			None if self.information
-			else "Feature information is missing!"),
+			else "Feature information is missing. Continue anyway?"),
 			c.separator(),
 
 			c.text_colored("Feature status:", 'yellow'),
@@ -47,7 +47,6 @@ class NiceFeatureGUI(BaseGUI):
 				self.information = value
 
 			elif tag == "Start":
-				assert self.information
 				assert self.process is None
 				self.status_queue = Queue()
 				self.task_statuses = ["Waiting"] * self.n_tasks
