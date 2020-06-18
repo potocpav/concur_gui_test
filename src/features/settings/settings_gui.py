@@ -20,7 +20,7 @@ def dummy(width, height):
 
 	Useful for custom-sized vertical or horizontal spacings.
 	"""
-    return lift(imgui.dummy, width, height)
+    return c.lift(imgui.dummy, width, height)
 
 
 class SettingsGUI(BaseGUI):

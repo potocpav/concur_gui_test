@@ -73,7 +73,10 @@ class BaseGUI(object):
 	def log_widget(text):
 		""" Log widget with auto-scroll. """
 		while True:
+			# https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html#imgui.core.push_text_wrap_position
+			imgui.push_text_wrap_pos()
 			imgui.text_unformatted(text)
+			imgui.pop_text_wrap_pos()
 			if imgui.get_scroll_y() >= imgui.get_scroll_max_y():
 				imgui.set_scroll_here(1.0)
 			yield

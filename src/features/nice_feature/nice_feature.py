@@ -24,6 +24,13 @@ class NiceFeature:
 	def run(self):
 		sleeptime = randint(1, 10)
 		self.logger.info(f"A worker is sleeping for {sleeptime} seconds.")
-		# self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))  # TODO: Output this in green color in concurs logging window
+		# TODO: Output this in green color in concurs logging window
+		#
+		# As Omar says (googled "imgui termial colors text widget"), you have to roll out your own colored-text widget.
+		# https://twitter.com/ocornut/status/972421631443337216?lang=en
+		#
+		# If all you need is per-line colors, it should be very easy. Just create `c.text_colored` widgets, one per each line.
+		#
+		# self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))
 		sleep(sleeptime)
 		return
