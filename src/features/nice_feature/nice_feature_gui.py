@@ -19,9 +19,12 @@ class NiceFeatureGUI(BaseGUI):
 		events = yield from c.window(self.name, c.multi_orr([
 			c.tag(tag_name="Status Queue", elem=c.listen(self.status_queue)),
 			c.tag("Log Queue", c.listen(self.log_queue)),
-
 			c.slider_int("Number of threads", self.n_threads, 1, 100),
-			c.slider_int("Number of tasks", self.n_tasks, 1, 1000),
+			c.same_line(),
+			c.drag_int("Number of threads", self.n_threads),
+			c.slider_int("Number of tasks  ", self.n_tasks, 1, 1000),
+			c.same_line(),
+			c.drag_int("Number of tasks", self.n_tasks),
 			c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
 			c.button("Terminate") if self.process
 			else self.validating_button("Start",

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import concur as c
 import imgui
 from concur.integrations import glfw
@@ -16,6 +18,11 @@ class Application:
 		self.state = State()
 		self.style_choices = {"Dark": imgui.style_colors_dark, "Classic": imgui.style_colors_classic, "Light": imgui.style_colors_light}
 		self.style = "Classic"
+		font_name = "Hack Regular Nerd Font Complete Mono Windows Compatible.ttf"
+		font_file = str(Path(Path.cwd()/"src"/"resources"/font_name))
+		imgui.create_context()
+		font = imgui.get_io().fonts.add_font_from_file_ttf(font_file, 14)
+		c.font(font, self.__create_main_view())
 
 		c.main(widget=self.run_application(), name="Application", width=1024, height=768, menu_bar=True)
 
