@@ -5,13 +5,13 @@ import colored
 
 
 class NiceFeature:
-	def __init__(self, feature_information, log_queue):
+	def __init__(self, information_dict):
 		self.logger = logging.getLogger('nice-feature')
 		logging.basicConfig(level=logging.DEBUG)
-		queue_handler = logging.handlers.QueueHandler(log_queue)
+		queue_handler = logging.handlers.QueueHandler(information_dict['log_queue'])
 		self.logger.addHandler(queue_handler)
 
-		self.some_information = feature_information
+		self.some_information = information_dict['information']
 		self.worker_id = None
 
 		# prints
@@ -21,10 +21,9 @@ class NiceFeature:
 		self.info = colored.fg("white")
 		self.important_info = colored.fg("light_blue")
 
-	def run(self, wid):
-		self.worker_id = wid
+	def run(self):
 		sleeptime = randint(1, 10)
-		self.logger.info(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.")
+		self.logger.info(f"A worker is sleeping for {sleeptime} seconds.")
 		# self.logger.info(colored.stylize(f"Worker: {self.worker_id} sleeping for {sleeptime} seconds.", self.good))  # TODO: Output this in green color in concurs logging window
 		sleep(sleeptime)
 		return

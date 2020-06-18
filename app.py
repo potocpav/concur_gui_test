@@ -15,7 +15,7 @@ class Application:
 	def __init__(self):
 		self.state = State()
 		self.style_choices = {"Dark": imgui.style_colors_dark, "Classic": imgui.style_colors_classic, "Light": imgui.style_colors_light}
-		self.style = "Dark"
+		self.style = "Classic"
 
 		c.main(widget=self.run_application(), name="Application", width=1024, height=768, menu_bar=True)
 
@@ -46,6 +46,8 @@ class Application:
 		return c.orr(widgets)
 
 	def run_application(self):
+		# Set configured theme (Default is Dark)
+		self.style_choices[self.style]()
 		while True:
 			tag, value = yield from self.__create_main_view()
 
