@@ -20,8 +20,7 @@ class SettingsGUI(BaseGUI):
 	def render(self):
 		events = yield from c.window(title=self.name, widget=c.multi_orr([
 			c.text("Style: "),
-			# c.same_line(),
-			c.orr([c.radio_button(label, active=self.style == label) for label in self.style_choices]),  # TODO: Can the buttons be aligned horizontally, instead of vertically?
+			c.orr_same_line([c.radio_button(label, active=self.style == label) for label in self.style_choices]),
 			c.spacing(),
 			c.text("Username: "),
 			c.same_line(),
