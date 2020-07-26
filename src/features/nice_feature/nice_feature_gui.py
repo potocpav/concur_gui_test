@@ -21,7 +21,6 @@ def progress_bar_widget(text, progress):
 	return c.forever(c.extra_widgets.pan_zoom, "", pz, None, 20, content_gen=overlay)
 
 
-
 class NiceFeatureGUI(BaseGUI):
 
 	def __init__(self):

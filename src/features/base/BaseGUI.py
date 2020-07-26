@@ -17,6 +17,8 @@ class BaseGUI(object):
 		self.n_tasks = 1
 		self.information_dict = None
 		self.log = ""
+		self.username = ""
+		self.password = ""
 
 	def threadify(self, _feature, information_dict: dict):
 		# `-1` signifies that the nice_thread status is returned. This is quite ugly. Maybe use two separate queues?
