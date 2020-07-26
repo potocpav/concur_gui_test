@@ -2,3 +2,4 @@ concur
 pywin32
 wxpython
 colored
+wheel

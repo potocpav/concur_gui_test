@@ -83,5 +83,13 @@ class BaseGUI(object):
 				imgui.set_scroll_here(1.0)
 			yield
 
+	@staticmethod
+	def evaluate_field_size(*argv):
+		fields = list()
+		for arg in argv:
+			fields.append(len(str(arg)) * 8)
+		largest = max(fields)
+		return largest if largest >= 85 else 85
+
 	def render(self):
 		pass

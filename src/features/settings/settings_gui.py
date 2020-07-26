@@ -113,7 +113,8 @@ class SettingsGUI(BaseGUI):
 
 		return self
 
-	# wxPython required, if installation throws errors, try with easy_install, if that also fails a linux package is missing
+	# wxPython required, if installation throws errors, try with easy_install, if that also fails a linux package is missing.
+	# sudo apt install dpkg-dev build-essential freeglut3-dev libgl1-mesa-dev libgl1-mesa-dev libglu1-mesa-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev libjpeg-dev libnotify-dev libpng-dev libsdl2-dev libsm-dev libtiff-dev libxtst-dev libwebkit2gtk-4.0-dev libsecret-1-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 	def prompt_for_input_file(self):
 		if "Linux" in system():
 			import wx
