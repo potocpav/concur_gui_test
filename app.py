@@ -6,8 +6,8 @@ import imgui
 from concur.integrations import glfw
 
 from src.features.nice_feature.nice_feature_gui import NiceFeatureGUI
-from src.features.settings.settings_gui import SettingsGUI
 from src.features.settings.settings_gui import BaseGUI
+from src.features.settings.settings_gui import SettingsGUI
 from src.support.server_auth import auth_with_login_server
 
 
@@ -88,7 +88,7 @@ class Application(BaseGUI):
 		imgui.create_context()
 		io = imgui.get_io()
 
-		# How would I add all of these, is this even possible?
+		# TODO* How would I add all of these, is this even possible or even a good idea?
 		glyph_ranges = [io.fonts.get_glyph_ranges_cyrillic(),
 						io.fonts.get_glyph_ranges_korean(),
 						io.fonts.get_glyph_ranges_japanese(),
@@ -111,8 +111,36 @@ class Application(BaseGUI):
 		else:
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_default()
 
-		# TODO I checked https://pyimgui.readthedocs.io/en/latest/guide/using-fonts.html but, there is no information about how to add multiple ranges at once.
+		# TODO(*) I checked https://pyimgui.readthedocs.io/en/latest/guide/using-fonts.html but, there is no information about how to add multiple ranges at once.
 		return io.fonts.add_font_from_file_ttf(filename=font_file, size_pixels=14, glyph_ranges=glyph_ranges_to_load)
+
+	def __auth_view(self):
+		view = c.orr([
+			c.collapsing_header(
+				text="Languages",
+				widget=c.orr([c.radio_button(label='English', active=self.language_dict['default'], tag='default'),
+							  c.same_line(),
+							  c.radio_button(label='Russian', active=self.language_dict['cyrillic'], tag='cyrillic'),
+							  c.same_line(),
+							  c.radio_button(label='Korean', active=self.language_dict['korean'], tag='korean'),
+							  c.radio_button(label='Japanese', active=self.language_dict['japanese'], tag='japanese'),
+							  c.same_line(),
+							  c.radio_button(label='Chinese', active=self.language_dict['chinese_full'], tag='chinese_full'),
+							  c.same_line(),
+							  c.radio_button(label='German', active=self.language_dict['latin'], tag='latin'),
+							  ]),
+				open=True),
+			self.custom_spacing(1, 1),
+			c.text("Username:"),
+			c.same_line(),
+			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.username, self.password))),
+			c.input_text(name="", value=self.username, tag="username"),
+			c.text("Password:"),
+			c.same_line(),
+			self.obf_input_text(name="", value=self.password, tag="password"),
+			c.button("Login", tag="login"),
+		])
+		return view
 
 	def auth(self):
 		self.style_choices[self.style]()
@@ -132,6 +160,7 @@ class Application(BaseGUI):
 						exit(1)
 				else:
 					print("Provide login credentials before you login.")
+
 			# TODO: Is there a way to get the current status of the collapsing_header() and change the window size, depending on if it is opened or closed?
 			# imgui.set_next_window_size(257, 166)   # Expanded
 			# imgui.set_next_window_size(225, 113)   # Collapsed
@@ -156,7 +185,7 @@ class Application(BaseGUI):
 				for key in self.language_dict.keys():
 					self.language_dict[key] = False
 				self.language_dict['chinese_full'] = True
-			elif tag in "german":
+			elif tag in "latin":
 				for key in self.language_dict.keys():
 					self.language_dict[key] = False
 				self.language_dict['latin'] = True
@@ -164,34 +193,6 @@ class Application(BaseGUI):
 			else:
 				print(f"Unhandled event: {tag}")
 			yield
-
-	def __auth_view(self):
-		view = c.orr([
-			c.collapsing_header(
-				text="Languages",
-				widget=c.orr([c.radio_button(label='English', active=self.language_dict['default'], tag='default'),
-							  c.same_line(),
-							  c.radio_button(label='Russian', active=self.language_dict['cyrillic'], tag='cyrillic'),
-							  c.same_line(),
-							  c.radio_button(label='Korean', active=self.language_dict['korean'], tag='korean'),
-							  c.radio_button(label='Japanese', active=self.language_dict['japanese'], tag='japanese'),
-							  c.same_line(),
-							  c.radio_button(label='Chinese', active=self.language_dict['chinese_full'], tag='chinese_full'),
-							  c.same_line(),
-							  c.radio_button(label='German', active=self.language_dict['latin'], tag='german'),
-							  ]),
-				open=True),
-			c.spacing(),
-			c.text("Username:"),
-			c.same_line(),
-			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.username, self.password))),
-			c.input_text(name="", value=self.username, tag="username"),
-			c.text("Password:"),
-			c.same_line(),
-			c.input_text(name="", value=self.password, tag="password"),
-			c.button("Login", tag="login"),
-		])
-		return view
 
 
 if __name__ == "__main__":

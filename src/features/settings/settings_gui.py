@@ -2,25 +2,26 @@ from platform import system
 
 import concur as c
 import imgui
+
 from src.features.base.BaseGUI import BaseGUI
 
 
 def input_text(name, value, buffer_length=255, tag=None, flags=0):
-    """ Text input. """
-    while True:
-        changed, new_value = imgui.input_text(name, value, buffer_length, flags)
-        if changed:
-            return (name if tag is None else tag), new_value
-        else:
-            yield
+	""" Text input. """
+	while True:
+		changed, new_value = imgui.input_text(name, value, buffer_length, flags)
+		if changed:
+			return (name if tag is None else tag), new_value
+		else:
+			yield
 
 
 def dummy(width, height):
-    """ Add a dummy element of a given `width` and `height`.
+	""" Add a dummy element of a given `width` and `height`.
 
 	Useful for custom-sized vertical or horizontal spacings.
 	"""
-    return c.lift(imgui.dummy, width, height)
+	return c.lift(imgui.dummy, width, height)
 
 
 class SettingsGUI(BaseGUI):
@@ -80,8 +81,8 @@ class SettingsGUI(BaseGUI):
 			# This widget is similar to, for example, `c.text`, since it doesn't react to events. The `text` widget is implemented as follows:
 			#
 			# def text(s):
-    		#     """ Passive text display widget. """
-    		#     return lift(imgui.text, s)
+			#     """ Passive text display widget. """
+			#     return lift(imgui.text, s)
 			#
 			# I adapted this function to implement `dummy`.
 			# I filed an issue against Concur: https://github.com/potocpav/python-concur/issues/23

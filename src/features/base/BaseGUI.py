@@ -1,5 +1,6 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing import Queue
+
 import concur as c
 import imgui
 
@@ -16,6 +17,7 @@ class BaseGUI(object):
 		self.n_threads = 500
 		self.n_tasks = 1
 		self.information_dict = None
+		self.log_list = list()
 		self.log = ""
 		self.username = ""
 		self.password = ""
@@ -71,12 +73,18 @@ class BaseGUI(object):
 			yield
 
 	# These two widgets are not in Concur, so they show how to add new widgets.
-	@staticmethod
-	def log_widget(text):
+	def log_widget(self, text):
 		""" Log widget with auto-scroll. """
 		while True:
 			# https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html#imgui.core.push_text_wrap_position
 			imgui.push_text_wrap_pos()
+
+			# Colored logging
+			for t in self.log_list:
+				text, color = t
+				r, g, b = color
+				imgui.text_colored(text, r, g, b)
+
 			imgui.text_unformatted(text)
 			imgui.pop_text_wrap_pos()
 			if imgui.get_scroll_y() >= imgui.get_scroll_max_y():
@@ -90,6 +98,26 @@ class BaseGUI(object):
 			fields.append(len(str(arg)) * 8)
 		largest = max(fields)
 		return largest if largest >= 85 else 85
+
+	@staticmethod
+	def obf_input_text(name, value, buffer_length=255, tag=None, flags=imgui.INPUT_TEXT_PASSWORD):
+		""" Text input.
+		obf_input_text(name="", value=password, tag="password"),
+		"""
+
+		while True:
+			changed, new_value = imgui.input_text(name, value, buffer_length, flags)
+			if changed:
+				return (name if tag is None else tag), new_value
+			else:
+				yield
+
+	@staticmethod
+	def custom_spacing(width, height):
+		""" Add a dummy element of a given `width` and `height`.
+		Useful for custom-sized vertical or horizontal spacings.
+		"""
+		return c.lift(imgui.dummy, width, height)
 
 	def render(self):
 		pass

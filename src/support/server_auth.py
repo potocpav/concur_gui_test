@@ -2,9 +2,9 @@ from sys import exit
 
 
 def auth_with_login_server(user, password):
-	# Do actual verification here.
+	# Dummy verification, if any char is a digit, authentication fails.
 	if isinstance(user, str) and isinstance(password, str):
-		if not user.isdigit() and not password.isdigit():
+		if not any(char.isdigit() for char in list(user)) and not any(char.isdigit() for char in list(password)):
 			return True
 		else:
 			print("Not authenthicated.")

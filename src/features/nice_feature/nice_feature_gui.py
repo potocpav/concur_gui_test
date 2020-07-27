@@ -1,11 +1,14 @@
-import concur as c
 from multiprocessing import Process, Queue
+
+import concur as c
+
 from src.features.base.BaseGUI import BaseGUI
 from src.features.nice_feature.nice_feature import NiceFeature
 
 
 def progress_bar_widget(text, progress):
 	""" Progress bar widget. """
+
 	# This widget is based off of `PanZoom`, which is a powerful pannable-zoomable canvas.
 	# It is certainly an overkill, because I use it just for the convenient sizing and transformation.
 	# The widget could be written quite easily using plain ImGUI calls instead. But this is easier for me.
@@ -15,7 +18,8 @@ def progress_bar_widget(text, progress):
 		return c.orr([
 			c.draw.rect_filled(0, 0, progress, 1, 0xff753b3b, tf=tf),
 			c.draw.text(text, 0.4, 0.2, 'white', tf=tf),
-			])
+		])
+
 	# The progress bar coordinate system is between (0, 1) in both axes (x, y).
 	pz = c.PanZoom((0, 0), (1, 1), False)
 	return c.forever(c.extra_widgets.pan_zoom, "", pz, None, 20, content_gen=overlay)
@@ -54,8 +58,8 @@ class NiceFeatureGUI(BaseGUI):
 			c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
 			c.button("Terminate") if self.process
 			else self.validating_button("Start",
-			None if self.information
-			else "Feature information is missing. Continue anyway?"),
+										None if self.information
+										else "Feature information is missing. Continue anyway?"),
 			c.separator(),
 
 			c.text_colored("Feature status:", 'yellow'),
@@ -105,7 +109,22 @@ class NiceFeatureGUI(BaseGUI):
 					self.task_statuses[thread_id] = new_status
 
 			elif tag == "Log Queue":
-				self.log += value.getMessage() + "\n"
+				msg = value.getMessage()
+
+				# Colored logging
+				try:
+					text, color = msg.split("|")
+				except:
+					text, color = msg, "white"
+
+				if color == "green":
+					rgb_tuple = (0, 255, 0)
+				elif color == "red":
+					rgb_tuple = (255, 0, 0)
+				else:
+					rgb_tuple = (255, 255, 255)
+
+				self.log_list.append((text, rgb_tuple))
 
 			elif tag == "Number of tasks":
 				self.n_tasks = value

@@ -1,6 +1,7 @@
 import logging.handlers
-from time import sleep
 from random import randint
+from time import sleep
+
 import colored
 
 
@@ -14,18 +15,11 @@ class NiceFeature:
 		self.some_information = information_dict['information']
 		self.worker_id = None
 
-		# prints
-		self.bad = colored.fg("dark_red_1") + colored.attr("bold")
-		self.unknown = colored.fg("orange_3")
-		self.good = colored.fg("medium_spring_green")
-		self.info = colored.fg("white")
-		self.important_info = colored.fg("light_blue")
-
 	def run(self):
 		sleeptime = randint(1, 10)
-		self.logger.info(f"A worker is sleeping for {sleeptime} seconds.")
-		# TODO: Output this in green color in concurs logging window
-		#
+
+		self.logger.info(f"A worker is sleeping for {sleeptime} seconds.|green")
+
 		# As Omar says (googled "imgui termial colors text widget"), you have to roll out your own colored-text widget.
 		# https://twitter.com/ocornut/status/972421631443337216?lang=en
 		#
