@@ -68,9 +68,7 @@ class NiceFeatureGUI(BaseGUI):
 			
 			c.input_text(name="Information, the feature needs", value=self.information, tag="info"),
 			c.button("Terminate", tag='terminate') if self.process
-			else self.validating_button("Start",
-										None if self.information
-										else "Feature information is missing. Continue anyway?"),
+			else self.dynamic_popup_button("Start", "Feature information is missing. Continue anyway?" if not self.information else self.evaluate_popup_behaviour({'information': True})),
 			c.separator(),
 
 			c.text_colored("Feature status:", 'yellow'),

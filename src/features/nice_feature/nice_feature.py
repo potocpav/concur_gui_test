@@ -2,8 +2,6 @@ import logging.handlers
 from random import randint
 from time import sleep
 
-import colored
-
 
 class NiceFeature:
 	def __init__(self, information_dict):

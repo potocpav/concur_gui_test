@@ -1,5 +1,4 @@
 from pathlib import Path
-from sys import exit
 
 import concur as c
 import imgui
@@ -138,7 +137,8 @@ class Application(BaseGUI):
 			c.text("Password:"),
 			c.same_line(),
 			self.obf_input_text(name="", value=self.password, tag="password"),
-			c.button("Login", tag="login"),
+			c.button("Terminate", tag='terminate') if self.process
+			else self.dynamic_popup_button(label="Login", error=self.evaluate_popup_behaviour({'user': self.username, 'password': self.password}), tag='login'),
 		])
 		return view
 
@@ -154,14 +154,19 @@ class Application(BaseGUI):
 				if self.username != "" and self.password != "":
 					if auth_with_login_server(self.username, self.password):
 						print("Logging in with", "User: ", self.username, "Password: ", self.password)
+						# TODO
+						'''
+						Doesnt feel perfectly save to do it with a simple True/False check, usually I do exits() at all places the code could possibly go if auth fails
+						but I dont know how to realize it with the structure of the gui, any ideas welcome.
+						'''
 						break
-					else:
-						print("Not authenthicated.")
-						exit(1)
-				else:
-					print("Provide login credentials before you login.")
 
-			# TODO: Is there a way to get the current status of the collapsing_header() and change the window size, depending on if it is opened or closed?
+					else:
+						print("Authentication failed")  # TODO How can I have a Popup shown here? *
+				else:
+					print("Provide login credentials before you login.")  # TODO (*)
+
+			# TODO: Is there a way to get the current status of the collapsing_header() here and change the window size, depending on if it is opened or closed?
 			# imgui.set_next_window_size(257, 166)   # Expanded
 			# imgui.set_next_window_size(225, 113)   # Collapsed
 

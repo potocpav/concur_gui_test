@@ -17,6 +17,7 @@ class BaseGUI(object):
 		self.n_threads = 500
 		self.n_tasks = 1
 		self.information_dict = None
+		self.is_continuable = True
 		self.log_list = list()
 		self.log = ""
 		self.username = ""
@@ -47,8 +48,7 @@ class BaseGUI(object):
 				rows.append(c.text(f"{i}: {status}"))
 			return c.collapsing_header("Thread status", c.optional(bool(self.task_statuses), c.orr, rows), open=False)
 
-	@staticmethod
-	def validating_button(label, error, tag=None):
+	def dynamic_popup_button(self, label, error, tag=None):
 		""" Validating button.
 		Behaves in the same way as a regular `concur.widgets.button` when `error` is None.
 		When `error` is a string, it displays an error popup instead of emitting an event.
@@ -62,15 +62,48 @@ class BaseGUI(object):
 
 			if imgui.begin_popup("Error Popup"):
 				imgui.text(error)
-				if imgui.button("OK"):
-					imgui.close_current_popup()
+				if self.is_continuable:
+					if imgui.button("Continue anyway"):
+						imgui.close_current_popup()
+						imgui.end_popup()
+						return tag if tag is not None else label, None
+					imgui.same_line()
+					if imgui.button("Cancel"):
+						imgui.close_current_popup()
 					imgui.end_popup()
-					return tag if tag is not None else label, None
-				imgui.same_line()
-				if imgui.button("Cancel"):
-					imgui.close_current_popup()
-				imgui.end_popup()
+				else:
+					if imgui.button("OK"):
+						imgui.close_current_popup()
+					imgui.end_popup()
 			yield
+
+	def evaluate_popup_behaviour(self, _input: dict = None):
+		# Evaluate if popup may be continueable
+		error = None
+		if _input:
+			if 'information' in _input:
+				if _input['information']:
+					self.is_continuable = True
+				else:
+					error = "You have to provide some information!"
+					self.is_continuable = False
+
+			elif 'user' in _input and 'password' in _input:
+				if _input['user'] is None or _input['user'] == "":
+					self.is_continuable = False
+					if error is None:
+						error = "You have to provide a username!"
+					else:
+						error = "\nYou have to provide a username!"
+
+				if _input['password'] is None or _input['password'] == "":
+					self.is_continuable = False
+					if error is None:
+						error = "You have to provide a password!"
+					else:
+						error += "\nYou have to provide a password!"
+
+		return error
 
 	# These two widgets are not in Concur, so they show how to add new widgets.
 	def log_widget(self, text):
