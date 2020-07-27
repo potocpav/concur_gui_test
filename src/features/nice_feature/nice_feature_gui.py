@@ -1,6 +1,7 @@
 from multiprocessing import Process, Queue
 
 import concur as c
+import imgui
 
 from src.features.base.BaseGUI import BaseGUI
 from src.features.nice_feature.nice_feature import NiceFeature
@@ -47,16 +48,26 @@ class NiceFeatureGUI(BaseGUI):
 
 		# use `multi_orr`, so that concurrent events aren't thrown away
 		events = yield from c.window(self.name, c.multi_orr([
-			c.tag(tag_name="Status Queue", elem=c.listen(self.status_queue)),
-			c.tag("Log Queue", c.listen(self.log_queue)),
-			c.slider_int("Number of threads", self.n_threads, 1, 100),
+			c.text_tooltip("Drag the slider or enter your preferred amount directly to adjust the amount of threads used.", c.text("Number of Threads")),
+			
+			# - #
+			c.slider_int(label="", value=self.n_threads, min_value=1, max_value=100, tag='threads'),
 			c.same_line(),
-			c.drag_int("Number of threads", self.n_threads),
-			c.slider_int("Number of tasks  ", self.n_tasks, 1, 1000),
+			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
+			c.interactive_elem(imgui.input_int, "", self.n_threads, tag="threads"),
+			c.lift(lambda: imgui.pop_item_width()),
+			# - #
+			
+			# - #
+			c.slider_int(label="", value=self.n_tasks, min_value=1, max_value=100, tag='tasks'),
 			c.same_line(),
-			c.drag_int("Number of tasks", self.n_tasks),
-			c.input_text(name="Information, the feature needs", value=self.information, tag="Information"),
-			c.button("Terminate") if self.process
+			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
+			c.interactive_elem(imgui.input_int, "", self.n_tasks, tag="threads"),
+			c.lift(lambda: imgui.pop_item_width()),
+			# - #
+			
+			c.input_text(name="Information, the feature needs", value=self.information, tag="info"),
+			c.button("Terminate", tag='terminate') if self.process
 			else self.validating_button("Start",
 										None if self.information
 										else "Feature information is missing. Continue anyway?"),
@@ -65,15 +76,17 @@ class NiceFeatureGUI(BaseGUI):
 			c.text_colored("Feature status:", 'yellow'),
 			c.text(f"{self.window_status}"),
 			progress_bar,
-			c.optional(self.task_statuses, self.generate_thread_table),
+			c.optional(bool(self.task_statuses), self.generate_thread_table),
 			c.separator(),
 			c.text_colored(f"{self.name} Log:", 'orange'),
 			c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+			c.tag(tag_name="status_queue", elem=c.listen(self.status_queue)),
+			c.tag("log_queue", c.listen(self.log_queue)),
 		]))
 
 		for tag, value in events:  # This is how event handling works with `multi_orr`
 
-			if tag == "Information":
+			if tag == "info":
 				self.information = value
 
 			elif tag == "Start":
@@ -87,7 +100,7 @@ class NiceFeatureGUI(BaseGUI):
 				self.process = Process(target=self.threadify, args=(NiceFeature, information_dict,))
 				self.process.start()
 
-			elif tag == "Terminate":
+			elif tag == "terminate":
 				assert self.process is not None
 				self.process.terminate()
 				self.window_status = "Terminated."
@@ -97,7 +110,7 @@ class NiceFeatureGUI(BaseGUI):
 					if status in ["Waiting", "Working..."]:
 						self.task_statuses[i] = "Terminated."
 
-			elif tag == "Status Queue":  # Handle events fired by threads.
+			elif tag == "status_queue":  # Handle events fired by threads.
 				# Update the thread state table
 				thread_id, new_status = value
 				# Update the feature status
@@ -108,7 +121,7 @@ class NiceFeatureGUI(BaseGUI):
 				else:
 					self.task_statuses[thread_id] = new_status
 
-			elif tag == "Log Queue":
+			elif tag == "log_queue":
 				msg = value.getMessage()
 
 				# Colored logging
@@ -126,10 +139,10 @@ class NiceFeatureGUI(BaseGUI):
 
 				self.log_list.append((text, rgb_tuple))
 
-			elif tag == "Number of tasks":
+			elif tag == "tasks":
 				self.n_tasks = value
 
-			elif tag == "Number of threads":
+			elif tag == "threads":
 				self.n_threads = value
 
 			else:

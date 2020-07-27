@@ -85,7 +85,6 @@ class BaseGUI(object):
 				r, g, b = color
 				imgui.text_colored(text, r, g, b)
 
-			imgui.text_unformatted(text)
 			imgui.pop_text_wrap_pos()
 			if imgui.get_scroll_y() >= imgui.get_scroll_max_y():
 				imgui.set_scroll_here(1.0)
