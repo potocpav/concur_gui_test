@@ -7,25 +7,6 @@ from src.features.base.BaseGUI import BaseGUI
 from src.features.nice_feature.nice_feature import NiceFeature
 
 
-def progress_bar_widget(text, progress):
-	""" Progress bar widget. """
-
-	# This widget is based off of `PanZoom`, which is a powerful pannable-zoomable canvas.
-	# It is certainly an overkill, because I use it just for the convenient sizing and transformation.
-	# The widget could be written quite easily using plain ImGUI calls instead. But this is easier for me.
-	#
-	# Additional colors could be added quite easily, using `rect_filled` with different colors.
-	def overlay(tf, event_gen):
-		return c.orr([
-			c.draw.rect_filled(0, 0, progress, 1, 0xff753b3b, tf=tf),
-			c.draw.text(text, 0.4, 0.2, 'white', tf=tf),
-		])
-
-	# The progress bar coordinate system is between (0, 1) in both axes (x, y).
-	pz = c.PanZoom((0, 0), (1, 1), False)
-	return c.forever(c.extra_widgets.pan_zoom, "", pz, None, 20, content_gen=overlay)
-
-
 class NiceFeatureGUI(BaseGUI):
 
 	def __init__(self):
@@ -42,30 +23,26 @@ class NiceFeatureGUI(BaseGUI):
 			n_total_threads = len(self.task_statuses)
 			progress = n_working_or_finished / n_total_threads
 			progress_text = f"{n_working_or_finished}/{n_total_threads}"
-			progress_bar = progress_bar_widget(progress_text, progress)
+			progress_bar = self.progress_bar_widget(progress_text, progress)
 		else:
 			progress_bar = c.nothing()
 
 		# use `multi_orr`, so that concurrent events aren't thrown away
 		events = yield from c.window(self.name, c.multi_orr([
 			c.text_tooltip("Drag the slider or enter your preferred amount directly to adjust the amount of threads used.", c.text("Number of Threads")),
-			
-			# - #
+
 			c.slider_int(label="", value=self.n_threads, min_value=1, max_value=100, tag='threads'),
 			c.same_line(),
 			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
 			c.interactive_elem(imgui.input_int, "", self.n_threads, tag="threads"),
 			c.lift(lambda: imgui.pop_item_width()),
-			# - #
-			
-			# - #
+
 			c.slider_int(label="", value=self.n_tasks, min_value=1, max_value=100, tag='tasks'),
 			c.same_line(),
 			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
 			c.interactive_elem(imgui.input_int, "", self.n_tasks, tag="threads"),
 			c.lift(lambda: imgui.pop_item_width()),
-			# - #
-			
+
 			c.input_text(name="Information, the feature needs", value=self.information, tag="info"),
 			c.button("Terminate", tag='terminate') if self.process
 			else self.dynamic_popup_button("Start", "Feature information is missing. Continue anyway?" if not self.information else self.evaluate_popup_behaviour({'information': True})),
@@ -142,8 +119,5 @@ class NiceFeatureGUI(BaseGUI):
 
 			elif tag == "threads":
 				self.n_threads = value
-
-			else:
-				print(f"Unhandled event: {tag}")
 
 		return self

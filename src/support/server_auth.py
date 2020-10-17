@@ -1,6 +1,3 @@
-from sys import exit
-
-
 def auth_with_login_server(user, password):
 	# Dummy verification, if any char is a digit, authentication fails.
 	if isinstance(user, str) and isinstance(password, str):

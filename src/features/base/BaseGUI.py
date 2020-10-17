@@ -107,6 +107,7 @@ class BaseGUI(object):
 
 	# These two widgets are not in Concur, so they show how to add new widgets.
 	def log_widget(self, text):
+		# TODO Fix autoscrolling
 		""" Log widget with auto-scroll. """
 		while True:
 			# https://pyimgui.readthedocs.io/en/latest/reference/imgui.core.html#imgui.core.push_text_wrap_position
@@ -133,9 +134,6 @@ class BaseGUI(object):
 
 	@staticmethod
 	def obf_input_text(name, value, buffer_length=255, tag=None, flags=imgui.INPUT_TEXT_PASSWORD):
-		""" Text input.
-		obf_input_text(name="", value=password, tag="password"),
-		"""
 
 		while True:
 			changed, new_value = imgui.input_text(name, value, buffer_length, flags)
@@ -150,6 +148,25 @@ class BaseGUI(object):
 		Useful for custom-sized vertical or horizontal spacings.
 		"""
 		return c.lift(imgui.dummy, width, height)
+
+	@staticmethod
+	def progress_bar_widget(text, progress):
+		""" Progress bar widget. """
+
+		# This widget is based off of `PanZoom`, which is a powerful pannable-zoomable canvas.
+		# It is certainly an overkill, because I use it just for the convenient sizing and transformation.
+		# The widget could be written quite easily using plain ImGUI calls instead. But this is easier for me.
+		#
+		# Additional colors could be added quite easily, using `rect_filled` with different colors.
+		def overlay(tf, event_gen):
+			return c.orr([
+				c.draw.rect_filled(0, 0, progress, 1, 0xff753b3b, tf=tf),
+				c.draw.text(text, 0.4, 0.2, 'white', tf=tf),
+			])
+
+		# The progress bar coordinate system is between (0, 1) in both axes (x, y).
+		pz = c.PanZoom((0, 0), (1, 1), False)
+		return c.forever(c.extra_widgets.pan_zoom, "", pz, None, 20, content_gen=overlay)
 
 	def render(self):
 		pass
