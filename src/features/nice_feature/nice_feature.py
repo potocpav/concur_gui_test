@@ -16,7 +16,8 @@ class NiceFeature:
 	def run(self):
 		sleeptime = randint(1, 10)
 
-		self.logger.info(f"A worker is sleeping for {sleeptime} seconds.|green")
+		# TODO The smiley is displayed as ? in the log widget
+		self.logger.info(f"A worker is sleeping for {sleeptime} seconds 😄.|green")
 
 		# As Omar says (googled "imgui termial colors text widget"), you have to roll out your own colored-text widget.
 		# https://twitter.com/ocornut/status/972421631443337216?lang=en

@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import exit
 
 import concur as c
 import imgui
@@ -25,18 +26,15 @@ class Application(BaseGUI):
 		self.username = ""
 		self.password = ""
 		self.glyph_ranges = None
-		self.language_dict = {
-			'default': True,
-			'latin': False,
-			'cyrillic': False,
-			'korean': False,
-			'japanese': False,
-			'chinese_full': False
-		}
-		self.font = self.__initialize_custom_font()
-		c.main(widget=c.font(self.font, self.auth()), name="Authentication", width=257, height=166)
-		self.font = self.__initialize_custom_font()  # TODO Apparently I have to initialize the font again, else I will get an assertion error.
-		c.main(widget=c.font(self.font, self.run_application()), name="Application", width=1024, height=768, menu_bar=True)
+		self.is_logged_in = False
+		self.flag_quit = False
+		self.language = "default"
+
+		if not self.is_logged_in:
+			c.main(widget=c.font(self.__initialize_custom_font(), self.__handle_auth()), name="Authentication", width=257, height=166)
+
+		if self.is_logged_in:
+			c.main(widget=c.font(self.__initialize_custom_font(), self.run_application()), name="Application", width=1024, height=768, menu_bar=True)
 
 	def __create_main_view(self):
 		widgets = list()
@@ -77,11 +75,12 @@ class Application(BaseGUI):
 			elif tag == "Quit":
 				break
 			else:
-				print(f"Unhandled event: {tag}")
+				exit(0)
 
 			yield
 
 	def __initialize_custom_font(self):
+		# https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack
 		font_name = "Hack Regular Nerd Font Complete Mono Windows Compatible.ttf"
 		font_file = str(Path(__file__).parent / "src" / "resources" / font_name)
 		imgui.create_context()
@@ -95,17 +94,17 @@ class Application(BaseGUI):
 						io.fonts.get_glyph_ranges_latin(),
 						io.fonts.get_glyph_ranges_default()]
 
-		if self.language_dict['default']:
+		if self.language == 'default':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_default()
-		elif self.language_dict['cyrillic']:
+		elif self.language == 'cyrillic':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_cyrillic()
-		elif self.language_dict['korean']:
+		elif self.language == 'korean':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_korean()
-		elif self.language_dict['japanese']:
+		elif self.language == 'japanese':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_japanese()
-		elif self.language_dict['chinese_full']:
+		elif self.language == 'chinese_full':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_chinese_full()
-		elif self.language_dict['latin']:
+		elif self.language == 'latin':
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_latin()
 		else:
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_default()
@@ -117,18 +116,19 @@ class Application(BaseGUI):
 		view = c.orr([
 			c.collapsing_header(
 				text="Languages",
-				widget=c.orr([c.radio_button(label='English', active=self.language_dict['default'], tag='default'),
-							  c.same_line(),
-							  c.radio_button(label='Russian', active=self.language_dict['cyrillic'], tag='cyrillic'),
-							  c.same_line(),
-							  c.radio_button(label='Korean', active=self.language_dict['korean'], tag='korean'),
-							  c.radio_button(label='Japanese', active=self.language_dict['japanese'], tag='japanese'),
-							  c.same_line(),
-							  c.radio_button(label='Chinese', active=self.language_dict['chinese_full'], tag='chinese_full'),
-							  c.same_line(),
-							  c.radio_button(label='German', active=self.language_dict['latin'], tag='latin'),
-							  ]),
-				open=True),
+				widget=c.orr([
+					c.radio_button(label='English', active=True if self.language == 'default' else False, tag='english'),
+					c.same_line(),
+					c.radio_button(label='Russian', active=True if self.language == 'cyrillic' else False, tag='cyrillic'),
+					c.same_line(),
+					c.radio_button(label='Korean', active=True if self.language == 'korean' else False, tag='korean'),
+					c.same_line(),
+					c.radio_button(label='Japanese', active=True if self.language == 'japanese' else False, tag='japanese'),
+					c.same_line(),
+					c.radio_button(label='Chinese', active=True if self.language == 'chinese_full' else False, tag='chinese_full'),
+					c.same_line(),
+					c.radio_button(label='German', active=True if self.language == 'latin' else False, tag='latin'),
+				]), open=True),
 			self.custom_spacing(1, 1),
 			c.text("Username:"),
 			c.same_line(),
@@ -142,10 +142,11 @@ class Application(BaseGUI):
 		])
 		return view
 
-	def auth(self):
+	def __handle_auth(self):
 		self.style_choices[self.style]()
 		while True:
 			tag, value = yield from self.__auth_view()
+
 			if tag in "username":
 				self.username = value
 			elif tag in "password":
@@ -154,49 +155,14 @@ class Application(BaseGUI):
 				if self.username != "" and self.password != "":
 					if auth_with_login_server(self.username, self.password):
 						print("Logging in with", "User: ", self.username, "Password: ", self.password)
-						# TODO
-						'''
-						Doesnt feel perfectly save to do it with a simple True/False check, usually I do exits() at all places the code could possibly go if auth fails
-						but I dont know how to realize it with the structure of the gui, any ideas welcome.
-						'''
+						self.is_logged_in = True
 						break
-
 					else:
-						print("Authentication failed")  # TODO How can I have a Popup shown here? *
-				else:
-					print("Provide login credentials before you login.")  # TODO (*)
+						print("Authentication failed")
 
-			# TODO: Is there a way to get the current status of the collapsing_header() here and change the window size, depending on if it is opened or closed?
-			# imgui.set_next_window_size(257, 166)   # Expanded
-			# imgui.set_next_window_size(225, 113)   # Collapsed
+			elif tag in ['default', 'cyrillic', 'korean', 'japanese', 'chinese_full', 'latin']:
+				self.language = tag
 
-			elif tag in "default":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['default'] = True
-			elif tag in "cyrillic":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['cyrillic'] = True
-			elif tag in "korean":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['korean'] = True
-			elif tag in "japanese":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['japanese'] = True
-			elif tag in "chinese_full":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['chinese_full'] = True
-			elif tag in "latin":
-				for key in self.language_dict.keys():
-					self.language_dict[key] = False
-				self.language_dict['latin'] = True
-
-			else:
-				print(f"Unhandled event: {tag}")
 			yield
 
 
