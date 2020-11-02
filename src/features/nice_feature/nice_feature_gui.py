@@ -54,7 +54,9 @@ class NiceFeatureGUI(BaseGUI):
 			c.optional(bool(self.task_statuses), self.generate_thread_table),
 			c.separator(),
 			c.text_colored(f"{self.name} Log:", 'orange'),
-			c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+
+			# c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+			c.window("Log", self.log_widget(self.log)),
 			c.tag(tag_name="status_queue", elem=c.listen(self.status_queue)),
 			c.tag("log_queue", c.listen(self.log_queue)),
 		]))

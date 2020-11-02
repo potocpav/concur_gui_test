@@ -31,10 +31,12 @@ class Application(BaseGUI):
 		self.language = "default"
 
 		if not self.is_logged_in:
-			c.main(widget=c.font(self.__initialize_custom_font(), self.__handle_auth()), name="Authentication", width=257, height=166)
+			self.__initialize_custom_font()
+			c.main(widget=self.__handle_auth(), name="Authentication", width=257, height=166)
 
 		if self.is_logged_in:
-			c.main(widget=c.font(self.__initialize_custom_font(), self.run_application()), name="Application", width=1024, height=768, menu_bar=True)
+			self.__initialize_custom_font()
+			c.main(widget=self.run_application(), name="Application", width=1024, height=768, menu_bar=True)
 
 	def __create_main_view(self):
 		widgets = list()
@@ -109,7 +111,18 @@ class Application(BaseGUI):
 		else:
 			glyph_ranges_to_load = io.fonts.get_glyph_ranges_default()
 
-		# TODO(*) I checked https://pyimgui.readthedocs.io/en/latest/guide/using-fonts.html but, there is no information about how to add multiple ranges at once.
+		# font = io.fonts.add_font_from_file_ttf(font_file, 14, io.fonts.custom_glyph_ranges([
+		# 	0x0020, 0x00FF,
+		# 	0x2000, 0x206F,
+		# 	0x3000, 0x30FF,
+		# 	0x31F0, 0x31FF,
+		# 	0xFF00, 0xFFEF,
+		# 	0x4e00, 0x9FAF,
+		# ]))
+		# io.fonts.add_font_from_file_ttf(font_file, 14, io.fonts.custom_glyph_ranges(
+		# 	[0x1f600, 0x1f800]),
+		# 								merge=True)
+		#
 		return io.fonts.add_font_from_file_ttf(filename=font_file, size_pixels=14, glyph_ranges=glyph_ranges_to_load)
 
 	def __auth_view(self):
