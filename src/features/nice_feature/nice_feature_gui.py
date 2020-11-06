@@ -28,38 +28,40 @@ class NiceFeatureGUI(BaseGUI):
 			progress_bar = c.nothing()
 
 		# use `multi_orr`, so that concurrent events aren't thrown away
-		events = yield from c.window(self.name, c.multi_orr([
-			c.text_tooltip("Drag the slider or enter your preferred amount directly to adjust the amount of threads used.", c.text("Number of Threads")),
+		events = yield from c.orr([
+			c.window(self.name, c.multi_orr([
+				c.text_tooltip("Drag the slider or enter your preferred amount directly to adjust the amount of threads used.", c.text("Number of Threads")),
 
-			c.slider_int(label="", value=self.n_threads, min_value=1, max_value=100, tag='threads'),
-			c.same_line(),
-			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
-			c.interactive_elem(imgui.input_int, "", self.n_threads, tag="threads"),
-			c.lift(lambda: imgui.pop_item_width()),
+				c.slider_int(label="", value=self.n_threads, min_value=1, max_value=100, tag='threads'),
+				c.same_line(),
+				c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
+				c.interactive_elem(imgui.input_int, "", self.n_threads, tag="threads"),
+				c.lift(lambda: imgui.pop_item_width()),
 
-			c.slider_int(label="", value=self.n_tasks, min_value=1, max_value=100, tag='tasks'),
-			c.same_line(),
-			c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
-			c.interactive_elem(imgui.input_int, "", self.n_tasks, tag="threads"),
-			c.lift(lambda: imgui.pop_item_width()),
+				c.slider_int(label="", value=self.n_tasks, min_value=1, max_value=100, tag='tasks'),
+				c.same_line(),
+				c.lift(lambda: imgui.push_item_width(self.evaluate_field_size(self.n_threads, self.n_tasks))),
+				c.interactive_elem(imgui.input_int, "", self.n_tasks, tag="threads"),
+				c.lift(lambda: imgui.pop_item_width()),
 
-			c.input_text(name="Information, the feature needs", value=self.information, tag="info"),
-			c.button("Terminate", tag='terminate') if self.process
-			else self.dynamic_popup_button("Start", "Feature information is missing. Continue anyway?" if not self.information else self.evaluate_popup_behaviour({'information': True})),
-			c.separator(),
+				c.input_text(name="Information, the feature needs", value=self.information, tag="info"),
+				c.button("Terminate", tag='terminate') if self.process
+				else self.dynamic_popup_button("Start", "Feature information is missing. Continue anyway?" if not self.information else self.evaluate_popup_behaviour({'information': True})),
+				c.separator(),
 
-			c.text_colored("Feature status:", 'yellow'),
-			c.text(f"{self.window_status}"),
-			progress_bar,
-			c.optional(bool(self.task_statuses), self.generate_thread_table),
-			c.separator(),
-			c.text_colored(f"{self.name} Log:", 'orange'),
+				c.text_colored("Feature status:", 'yellow'),
+				c.text(f"{self.window_status}"),
+				progress_bar,
+				c.optional(bool(self.task_statuses), self.generate_thread_table),
+				c.separator(),
+				c.text_colored(f"{self.name} Log:", 'orange'),
 
-			# c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+				# c.child(name=f"{self.name} Log", widget=self.log_widget(self.log), width=-1, height=-1, border=True),
+				c.tag(tag_name="status_queue", elem=c.listen(self.status_queue)),
+				c.tag("log_queue", c.listen(self.log_queue)),
+				])),
 			c.window("Log", self.log_widget(self.log)),
-			c.tag(tag_name="status_queue", elem=c.listen(self.status_queue)),
-			c.tag("log_queue", c.listen(self.log_queue)),
-		]))
+		])
 
 		for tag, value in events:  # This is how event handling works with `multi_orr`
 
